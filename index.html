@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT Yönetim Paneli</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#2563eb;--accent-light:#eff6ff;--accent-mid:#bfdbfe;
+  --danger:#dc2626;--danger-light:#fef2f2;--danger-mid:#fca5a5;
+  --warn:#d97706;--warn-light:#fffbeb;--warn-mid:#fcd34d;
+  --success:#16a34a;--success-light:#f0fdf4;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.15);
+  --text:#111;--text2:#4b5563;--text3:#9ca3af;
+  --bg:#f8f8f6;--surface:#fff;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,0.07),0 4px 12px rgba(0,0,0,0.05);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.1);
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+body{display:flex;flex-direction:column}
+
+/* SIDEBAR */
+.layout{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-logo .logo-title{font-size:16px;font-weight:600;color:var(--text);letter-spacing:-0.5px}
+.sidebar-logo .logo-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+.nav-section{padding:12px 12px 0}
+.nav-section-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text2);font-size:13px;font-weight:400;margin-bottom:2px;transition:all 0.15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:#f3f4f6;color:var(--text)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav-item .nav-icon{width:18px;height:18px;opacity:0.7;flex-shrink:0}
+.nav-item.active .nav-icon{opacity:1}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border)}
+.sidebar-stat{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:6px;background:#f9fafb;margin-bottom:6px}
+.sidebar-stat-label{font-size:11px;color:var(--text3)}
+.sidebar-stat-val{font-size:13px;font-weight:600;color:var(--text)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.3px}
+.page-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.btn{padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif}
+.btn:hover{border-color:var(--border2);background:#f9fafb}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-danger{background:var(--danger-light);color:var(--danger);border-color:var(--danger-mid)}
+.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+.content{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* ALERTS */
+.alert-box{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:var(--radius);margin-bottom:14px;border:1px solid}
+.alert-box.danger{background:var(--danger-light);border-color:var(--danger-mid)}
+.alert-box.warn{background:var(--warn-light);border-color:var(--warn-mid)}
+.alert-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:#fff;margin-top:1px}
+.alert-box.danger .alert-dot{background:var(--danger)}
+.alert-box.warn .alert-dot{background:var(--warn)}
+.alert-title{font-size:13px;font-weight:600}
+.alert-box.danger .alert-title{color:var(--danger)}
+.alert-box.warn .alert-title{color:var(--warn)}
+.alert-body{font-size:12px;margin-top:3px;line-height:1.5}
+.alert-box.danger .alert-body{color:#991b1b}
+.alert-box.warn .alert-body{color:#92400e}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.stat-value{font-size:28px;font-weight:600;color:var(--text);letter-spacing:-1px}
+.stat-value.danger{color:var(--danger)}
+.stat-value.warn{color:var(--warn)}
+.stat-value.success{color:var(--success)}
+
+/* CARDS */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:15px;font-weight:600;color:var(--text)}
+
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.client-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all 0.2s;box-shadow:var(--shadow)}
+.client-card:hover{box-shadow:var(--shadow-md);border-color:var(--accent-mid);transform:translateY(-1px)}
+.client-card.card-danger{border-color:var(--danger-mid);background:var(--danger-light)}
+.client-card.card-warn{border-color:var(--warn-mid);background:var(--warn-light)}
+
+.client-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;letter-spacing:0.5px}
+.client-name{font-size:15px;font-weight:600;color:var(--text)}
+.client-goal{font-size:12px;color:var(--text3);margin-top:2px}
+
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.2px}
+.badge-danger{background:#fee2e2;color:#991b1b}
+.badge-warn{background:#fef3c7;color:#92400e}
+.badge-ok{background:#dcfce7;color:#166534}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-gray{background:#f3f4f6;color:#374151}
+
+.progress-row{margin:10px 0 4px;display:flex;justify-content:space-between;align-items:center}
+.progress-label{font-size:11px;color:var(--text3)}
+.progress-bar{height:5px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.4s}
+.note-preview{font-size:11px;color:var(--text3);margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:italic}
+
+/* SCHEDULE */
+.appt-group-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:18px 0 8px}
+.appt-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:16px;margin-bottom:8px;box-shadow:var(--shadow)}
+.appt-timebox{background:var(--accent-light);border-radius:8px;padding:10px 14px;text-align:center;min-width:56px}
+.appt-hour{font-size:16px;font-weight:700;color:var(--accent);font-family:'DM Mono',monospace}
+.appt-day{font-size:9px;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-top:1px}
+.appt-info{flex:1}
+.appt-client{font-size:14px;font-weight:600;color:var(--text)}
+.appt-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.appt-actions{display:flex;gap:8px;align-items:center}
+
+/* PAYMENTS */
+.payment-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.payment-card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:#fafafa}
+.payment-table{width:100%;border-collapse:collapse}
+.payment-table th{text-align:left;padding:10px 18px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;background:#f9fafb;border-bottom:1px solid var(--border)}
+.payment-table td{padding:11px 18px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)}
+.payment-table tr:last-child td{border-bottom:none}
+.payment-table tr:hover td{background:#fafafa}
+select.status-sel{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:94%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:slideUp 0.2s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.modal-title{font-size:17px;font-weight:600;color:var(--text)}
+.modal-close{width:30px;height:30px;border:1px solid var(--border);border-radius:50%;background:#fff;cursor:pointer;font-size:18px;color:var(--text3);display:flex;align-items:center;justify-content:center;line-height:1;transition:all 0.15s}
+.modal-close:hover{background:#f3f4f6;color:var(--text)}
+
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block}
+input[type=text],input[type=number],input[type=date],input[type=time],input[type=email],input[type=tel],select,textarea{width:100%;padding:9px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text);background:var(--surface);outline:none;font-family:'DM Sans',sans-serif;transition:border-color 0.15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.08)}
+textarea{resize:vertical;min-height:90px;line-height:1.6}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-full{width:100%;padding:11px;font-size:14px}
+.modal-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-top:4px}
+
+/* CLIENT DETAIL */
+.detail-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:13px}
+.detail-row:last-child{border-bottom:none}
+.detail-label{color:var(--text3)}
+.detail-val{font-weight:500;color:var(--text)}
+.note-display{background:#f9fafb;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;min-height:70px}
+.note-empty{color:var(--text3);font-style:italic}
+
+.appt-mini{display:flex;justify-content:space-between;padding:7px 0;font-size:12px;border-bottom:1px solid rgba(0,0,0,0.05)}
+.appt-mini:last-child{border-bottom:none}
+
+.lesson-controls{display:flex;gap:8px;margin-top:10px;align-items:center}
+.lesson-btn{width:32px;height:32px;border:1px solid var(--border);border-radius:50%;background:#fff;cursor:pointer;font-size:18px;font-weight:300;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.15s}
+.lesson-btn:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.lesson-count{font-size:20px;font-weight:700;color:var(--text);min-width:40px;text-align:center;font-family:'DM Mono',monospace}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">PT Panel</div>
+    <div class="logo-sub">Kişisel Antrenör Sistemi</div>
+  </div>
+  <div class="nav-section" style="margin-top:8px">
+    <div class="nav-section-label">Ana Menü</div>
+    <button class="nav-item active" onclick="nav('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Genel Bakış
+      <span class="nav-badge" id="nb-alert" style="display:none">0</span>
+    </button>
+    <button class="nav-item" onclick="nav('clients')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Müşteriler
+    </button>
+    <button class="nav-item" onclick="nav('schedule')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Randevular
+    </button>
+    <button class="nav-item" onclick="nav('payments')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Ödemeler
+    </button>
+  </div>
+  <div class="sidebar-bottom" id="sidebar-stats"></div>
+  <div style="padding:0 12px 16px;display:flex;flex-direction:column;gap:6px">
+    <button id="drive-btn" class="btn" style="width:100%;font-size:12px;padding:7px 10px;display:flex;align-items:center;gap:6px;justify-content:center" onclick="connectToDrive()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Drive'a Bağlan
+    </button>
+    <button class="btn" style="width:100%;font-size:12px;padding:7px 10px;display:flex;align-items:center;gap:6px;justify-content:center" onclick="exportDB()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Yedeği İndir
+    </button>
+    <label class="btn" style="width:100%;font-size:12px;padding:7px 10px;display:flex;align-items:center;gap:6px;justify-content:center;cursor:pointer;margin:0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Yedek Yükle
+      <input type="file" accept=".json" style="display:none" onchange="importDB(event)">
+    </label>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="page-title">Genel Bakış</div>
+      <div class="page-sub" id="page-sub">Bugünün özeti</div>
+    </div>
+    <div class="topbar-actions" id="topbar-actions"></div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="maybeClose(event)">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+const AVATAR_BG=["#dbeafe","#dcfce7","#fce7f3","#fef3c7","#ede9fe","#ffedd5","#d1fae5","#fee2e2"];
+const AVATAR_TXT=["#1e40af","#166534","#9d174d","#92400e","#5b21b6","#c2410c","#065f46","#991b1b"];
+const MONTHS=["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+const MONTHS_FULL=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const DAYS=["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+
+// ── LOCAL STORAGE ──────────────────────────────────────────────────────────
+const STORAGE_KEY = 'pt_panel_v2';
+
+function saveDB() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  scheduleDriveSync();
+}
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function exportDB() {
+  const data = JSON.stringify(db, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0,10);
+  a.href = url;
+  a.download = `pt-panel-yedek-${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importDB(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.clients || !parsed.appointments) {
+        alert('Geçersiz yedek dosyası!');
+        return;
+      }
+      if (!confirm(`Bu yedek dosyasında ${parsed.clients.length} müşteri ve ${parsed.appointments.length} randevu var. Mevcut veriler silinecek. Devam edilsin mi?`)) return;
+      db = parsed;
+      saveDB();
+      render();
+      updateSidebarStats();
+      alert('Veriler başarıyla yüklendi!');
+    } catch(err) {
+      alert('Dosya okunamadı. Geçerli bir yedek dosyası seçin.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ── GOOGLE DRIVE SYNC ──────────────────────────────────────────────────────
+const GDRIVE_CLIENT_ID = '159547415921-2qjcvj5jeo1puhueoqdjun7tmsd29kmg.apps.googleusercontent.com';
+const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const GDRIVE_FILE_NAME = 'pt-panel-data.json';
+let gdriveToken = null;
+let gdriveFileId = null;
+let gdriveSyncTimeout = null;
+
+function initGoogleAuth() {
+  const savedToken = localStorage.getItem('gdrive_token');
+  const savedExpiry = localStorage.getItem('gdrive_token_expiry');
+  if (savedToken && savedExpiry && Date.now() < parseInt(savedExpiry)) {
+    gdriveToken = savedToken;
+    updateDriveButton('connected');
+    loadFromDrive();
+  } else {
+    updateDriveButton('disconnected');
+  }
+}
+
+function updateDriveButton(state) {
+  const btn = document.getElementById('drive-btn');
+  if (!btn) return;
+  if (state === 'connected') {
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Drive Bağlı`;
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+  } else if (state === 'syncing') {
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Kaydediliyor...`;
+    btn.style.color = 'var(--warn)';
+    btn.style.borderColor = 'var(--warn)';
+  } else {
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Drive'a Bağlan`;
+    btn.style.color = 'var(--text2)';
+    btn.style.borderColor = 'var(--border)';
+  }
+}
+
+function connectToDrive() {
+  if (gdriveToken) {
+    if (confirm('Google Drive bağlantısını kesmek istiyor musun?')) {
+      gdriveToken = null;
+      gdriveFileId = null;
+      localStorage.removeItem('gdrive_token');
+      localStorage.removeItem('gdrive_token_expiry');
+      localStorage.removeItem('gdrive_file_id');
+      updateDriveButton('disconnected');
+    }
+    return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: GDRIVE_CLIENT_ID,
+    scope: GDRIVE_SCOPE,
+    callback: (response) => {
+      if (response.access_token) {
+        gdriveToken = response.access_token;
+        const expiry = Date.now() + (response.expires_in * 1000);
+        localStorage.setItem('gdrive_token', gdriveToken);
+        localStorage.setItem('gdrive_token_expiry', expiry.toString());
+        updateDriveButton('connected');
+        loadFromDrive();
+      }
+    }
+  });
+  client.requestAccessToken();
+}
+
+async function findDriveFile() {
+  const saved = localStorage.getItem('gdrive_file_id');
+  if (saved) { gdriveFileId = saved; return saved; }
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${GDRIVE_FILE_NAME}'&fields=files(id,name)`,
+    { headers: { Authorization: `Bearer ${gdriveToken}` } }
+  );
+  const data = await res.json();
+  if (data.files && data.files.length > 0) {
+    gdriveFileId = data.files[0].id;
+    localStorage.setItem('gdrive_file_id', gdriveFileId);
+    return gdriveFileId;
+  }
+  return null;
+}
+
+async function loadFromDrive() {
+  if (!gdriveToken) return;
+  try {
+    const fileId = await findDriveFile();
+    if (!fileId) { saveToDrive(); return; }
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      { headers: { Authorization: `Bearer ${gdriveToken}` } }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.clients && data.appointments) {
+      db = data;
+      saveDB();
+      render();
+      updateSidebarStats();
+    }
+  } catch(e) { console.error('Drive yükleme hatası:', e); }
+}
+
+async function saveToDrive() {
+  if (!gdriveToken) return;
+  updateDriveButton('syncing');
+  try {
+    const content = JSON.stringify(db);
+    const fileId = await findDriveFile();
+    let res;
+    if (fileId) {
+      res = await fetch(
+        `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+        { method: 'PATCH', headers: { Authorization: `Bearer ${gdriveToken}`, 'Content-Type': 'application/json' }, body: content }
+      );
+    } else {
+      const meta = { name: GDRIVE_FILE_NAME, parents: ['appDataFolder'] };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+      form.append('file', new Blob([content], { type: 'application/json' }));
+      res = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        { method: 'POST', headers: { Authorization: `Bearer ${gdriveToken}` }, body: form }
+      );
+      const created = await res.json();
+      if (created.id) {
+        gdriveFileId = created.id;
+        localStorage.setItem('gdrive_file_id', gdriveFileId);
+      }
+    }
+    updateDriveButton('connected');
+  } catch(e) {
+    console.error('Drive kaydetme hatası:', e);
+    updateDriveButton('connected');
+  }
+}
+
+function scheduleDriveSync() {
+  if (!gdriveToken) return;
+  clearTimeout(gdriveSyncTimeout);
+  gdriveSyncTimeout = setTimeout(saveToDrive, 2000);
+}
+
+// ── DEFAULT DATA ───────────────────────────────────────────────────────────
+const DEFAULT_DB = {
+  clients:[
+    {id:1,name:"Ayşe Kaya",goal:"Kilo Verme",phone:"0532 111 2233",email:"ayse@mail.com",remaining:1,total:10,notes:"Diz ağrısı var, squat sınırlandırılıyor. Gluten hassasiyeti mevcut.",payments:[{date:"2025-01-10",amount:2000,status:"Ödendi"},{date:"2025-02-10",amount:2000,status:"Ödendi"},{date:"2025-03-10",amount:2000,status:"Bekliyor"}]},
+    {id:2,name:"Mehmet Demir",goal:"Kas Kazanımı",phone:"0542 222 3344",email:"mehmet@mail.com",remaining:0,total:8,notes:"Omuz ameliyatı geçirdi (2023). Overhead press yasak.",payments:[{date:"2025-01-15",amount:1600,status:"Ödendi"},{date:"2025-02-15",amount:1600,status:"Ödendi"}]},
+    {id:3,name:"Zeynep Arslan",goal:"Genel Fitness",phone:"0555 333 4455",email:"zeynep@mail.com",remaining:5,total:12,notes:"",payments:[{date:"2025-01-20",amount:2400,status:"Ödendi"},{date:"2025-02-20",amount:2400,status:"Bekliyor"}]},
+    {id:4,name:"Can Yılmaz",goal:"Sporcu Performansı",phone:"0543 444 5566",email:"can@mail.com",remaining:8,total:16,notes:"Futbol oynuyor. Hamstring yaralanması geçmişi var.",payments:[{date:"2025-01-05",amount:3200,status:"Ödendi"},{date:"2025-02-05",amount:3200,status:"Ödendi"},{date:"2025-03-05",amount:3200,status:"Ödendi"}]},
+    {id:5,name:"Elif Şahin",goal:"Postür Düzeltme",phone:"0551 555 6677",email:"elif@mail.com",remaining:2,total:10,notes:"Masa başı çalışan, boyun ve sırt problemi. Hipertansiyon mevcut.",payments:[{date:"2025-01-12",amount:2000,status:"Ödendi"},{date:"2025-02-12",amount:2000,status:"Gecikmiş"}]},
+  ],
+  appointments:[
+    {id:1,clientId:1,date:"2025-04-28",time:"10:00",duration:60,type:"Normal Seans"},
+    {id:2,clientId:3,date:"2025-04-28",time:"12:00",duration:60,type:"Normal Seans"},
+    {id:3,clientId:4,date:"2025-04-29",time:"09:00",duration:90,type:"Performans"},
+    {id:4,clientId:5,date:"2025-04-29",time:"11:00",duration:60,type:"Normal Seans"},
+    {id:5,clientId:2,date:"2025-04-30",time:"14:00",duration:60,type:"Değerlendirme"},
+    {id:6,clientId:1,date:"2025-05-02",time:"10:00",duration:60,type:"Normal Seans"},
+  ]
+};
+
+let db = loadDB() || JSON.parse(JSON.stringify(DEFAULT_DB));
+let currentPage = 'dashboard';
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function getClient(id){return db.clients.find(c=>c.id==id)}
+function newId(){return Date.now()+Math.floor(Math.random()*1000)}
+function avatar(name,idx){
+  const i=idx%8;
+  const parts=name.trim().split(' ');
+  const ini=(parts[0][0]+(parts[1]?parts[1][0]:'')).toUpperCase();
+  return`<div class="avatar" style="background:${AVATAR_BG[i]};color:${AVATAR_TXT[i]}">${ini}</div>`;
+}
+function clientIdx(id){return db.clients.findIndex(c=>c.id==id)}
+function alertClients(){return db.clients.filter(c=>c.remaining===0)}
+function warnClients(){return db.clients.filter(c=>c.remaining===1)}
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function fmtDate(d){
+  const dt=new Date(d+'T00:00:00');
+  return`${dt.getDate()} ${MONTHS_FULL[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────────
+function nav(page){
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[['dashboard','clients','schedule','payments'].indexOf(page)].classList.add('active');
+  updateSidebarStats();
+  render();
+}
+
+function updateSidebarStats(){
+  const al=alertClients().length+warnClients().length;
+  const nb=document.getElementById('nb-alert');
+  if(al>0){nb.style.display='';nb.textContent=al;}else{nb.style.display='none';}
+  const pending=db.clients.reduce((s,c)=>s+c.payments.filter(p=>p.status!=='Ödendi').length,0);
+  document.getElementById('sidebar-stats').innerHTML=`
+    <div class="sidebar-stat"><span class="sidebar-stat-label">Toplam Müşteri</span><span class="sidebar-stat-val">${db.clients.length}</span></div>
+    <div class="sidebar-stat"><span class="sidebar-stat-label">Randevu (bu ay)</span><span class="sidebar-stat-val">${db.appointments.filter(a=>a.date.startsWith(new Date().toISOString().slice(0,7))).length}</span></div>
+    <div class="sidebar-stat"><span class="sidebar-stat-label" style="color:#dc2626">Bekleyen Ödeme</span><span class="sidebar-stat-val" style="color:#dc2626">${pending}</span></div>
+  `;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function render(){
+  const titles={dashboard:['Genel Bakış','Bugünün ve gelecek haftanın özeti'],clients:['Müşteriler','Tüm müşteri profilleri ve ders durumları'],schedule:['Randevu Takvimi','Planlanmış seanslar'],payments:['Ödemeler','Ödeme planları ve takip']};
+  const [title,sub]=titles[currentPage];
+  document.getElementById('page-title').textContent=title;
+  document.getElementById('page-sub').textContent=sub;
+
+  const actions={
+    dashboard:'',
+    clients:`<button class="btn btn-primary" onclick="openAddClient()">+ Yeni Müşteri</button>`,
+    schedule:`<button class="btn btn-primary" onclick="openAddAppt()">+ Randevu Ekle</button>`,
+    payments:`<button class="btn" onclick="openAddPaymentGlobal()">+ Ödeme Ekle</button>`,
+  };
+  document.getElementById('topbar-actions').innerHTML=actions[currentPage];
+
+  const el=document.getElementById('content');
+  if(currentPage==='dashboard') el.innerHTML=renderDashboard();
+  else if(currentPage==='clients') el.innerHTML=renderClients();
+  else if(currentPage==='schedule') el.innerHTML=renderSchedule();
+  else el.innerHTML=renderPayments();
+}
+
+// ── ALERTS ─────────────────────────────────────────────────────────────────
+function renderAlerts(){
+  let h='';
+  const empty=alertClients(), warn=warnClients();
+  if(empty.length) h+=`<div class="alert-box danger"><div class="alert-dot">!</div><div><div class="alert-title">Ders Paketi Biten Müşteriler (${empty.length})</div><div class="alert-body">${empty.map(c=>c.name).join(' · ')} — Dersleri tükenmiş, yeni paket eklenmesi gerekiyor.</div></div></div>`;
+  if(warn.length) h+=`<div class="alert-box warn"><div class="alert-dot">!</div><div><div class="alert-title">Son 1 Dersi Kalan Müşteriler (${warn.length})</div><div class="alert-body">${warn.map(c=>c.name).join(' · ')} — Bir sonraki seans için paket yenilemesi önerilir.</div></div></div>`;
+  return h;
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const today=todayStr();
+  const todayAppts=db.appointments.filter(a=>a.date===today);
+  const upcoming=db.appointments.filter(a=>a.date>=today).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time)).slice(0,6);
+  const pending=db.clients.reduce((s,c)=>s+c.payments.filter(p=>p.status!=='Ödendi').length,0);
+  const pendingAmt=db.clients.reduce((s,c)=>s+c.payments.filter(p=>p.status!=='Ödendi').reduce((x,p)=>x+p.amount,0),0);
+
+  return`
+  ${renderAlerts()}
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Toplam Müşteri</div><div class="stat-value">${db.clients.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Bugünkü Seans</div><div class="stat-value success">${todayAppts.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Ders Biten / Son</div><div class="stat-value danger">${alertClients().length+warnClients().length}</div></div>
+    <div class="stat-card"><div class="stat-label">Bekleyen Ödeme</div><div class="stat-value warn">${pending}</div></div>
+  </div>
+  ${pendingAmt>0?`<div class="alert-box warn" style="margin-bottom:16px"><div class="alert-dot">₺</div><div><div class="alert-title">Tahsilat Bekleyen Tutar</div><div class="alert-body">${pendingAmt.toLocaleString('tr-TR')}₺ henüz ödenmedi.</div></div></div>`:''}
+  <div class="section-header"><div class="section-title">Yaklaşan Randevular</div></div>
+  ${upcoming.map(a=>{
+    const c=getClient(a.clientId);if(!c)return'';
+    const d=new Date(a.date+'T00:00:00');
+    const isToday=a.date===today;
+    return`<div class="appt-item">
+      <div class="appt-timebox" style="${isToday?'background:#dcfce7':''}">
+        <div class="appt-hour" style="${isToday?'color:#16a34a':''}">${a.time}</div>
+        <div class="appt-day" style="${isToday?'color:#16a34a':''}">${isToday?'Bugün':DAYS[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]}</div>
+      </div>
+      ${avatar(c.name,clientIdx(c.id))}
+      <div class="appt-info">
+        <div class="appt-client">${c.name}</div>
+        <div class="appt-meta">${a.duration} dk · ${a.type}</div>
+      </div>
+      <span class="badge ${c.remaining===0?'badge-danger':c.remaining===1?'badge-warn':'badge-blue'}">${c.remaining===0?'Ders Bitti':c.remaining===1?'Son 1 Ders':c.remaining+' ders kaldı'}</span>
+    </div>`;
+  }).join('')}`;
+}
+
+// ── CLIENTS ────────────────────────────────────────────────────────────────
+function renderClients(){
+  return`
+  ${renderAlerts()}
+  <div class="client-grid">
+    ${db.clients.map((c,i)=>{
+      const pct=c.total>0?Math.round((c.remaining/c.total)*100):0;
+      const cls=c.remaining===0?'card-danger':c.remaining===1?'card-warn':'';
+      const badge=c.remaining===0?'<span class="badge badge-danger">Ders Bitti</span>':c.remaining===1?'<span class="badge badge-warn">Son 1 Ders</span>':c.remaining<=3?`<span class="badge badge-warn">${c.remaining} Ders</span>`:`<span class="badge badge-ok">${c.remaining} Ders</span>`;
+      const paid=c.payments.filter(p=>p.status==='Ödendi').reduce((s,p)=>s+p.amount,0);
+      const total=c.payments.reduce((s,p)=>s+p.amount,0);
+      return`<div class="client-card ${cls}" onclick="openClientDetail(${c.id})">
+        <div class="client-top">
+          ${avatar(c.name,i)}
+          <div style="flex:1"><div class="client-name">${c.name}</div><div class="client-goal">${c.goal}</div></div>
+          ${badge}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px">
+          <span>Ders: ${c.remaining}/${c.total}</span>
+          <span>Ödenen: ${paid.toLocaleString('tr-TR')}/${total.toLocaleString('tr-TR')}₺</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c.remaining===0?'var(--danger)':c.remaining<=2?'var(--warn)':'var(--success)'}"></div></div>
+        ${c.notes?`<div class="note-preview">Not: ${c.notes.substring(0,70)}${c.notes.length>70?'…':''}</div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── SCHEDULE ───────────────────────────────────────────────────────────────
+function renderSchedule(){
+  const sorted=[...db.appointments].sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+  const grouped={};
+  sorted.forEach(a=>{if(!grouped[a.date])grouped[a.date]=[];grouped[a.date].push(a);});
+  const today=todayStr();
+  if(!sorted.length) return`<div style="text-align:center;padding:60px;color:var(--text3)">Henüz randevu yok.<br><br><button class="btn btn-primary" onclick="openAddAppt()">+ İlk Randevuyu Ekle</button></div>`;
+  return Object.keys(grouped).sort().map(date=>{
+    const d=new Date(date+'T00:00:00');
+    const isToday=date===today;
+    return`<div class="appt-group-label" style="${isToday?'color:var(--success)':''}">${isToday?'● BUGÜN — ':''}${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}</div>
+    ${grouped[date].map(a=>{
+      const c=getClient(a.clientId);if(!c)return'';
+      return`<div class="appt-item">
+        <div class="appt-timebox">
+          <div class="appt-hour">${a.time}</div>
+          <div class="appt-day">${a.duration}dk</div>
+        </div>
+        ${avatar(c.name,clientIdx(c.id))}
+        <div class="appt-info">
+          <div class="appt-client">${c.name}</div>
+          <div class="appt-meta">${a.type} · ${c.goal}</div>
+        </div>
+        <div class="appt-actions">
+          <span class="badge ${c.remaining===0?'badge-danger':c.remaining===1?'badge-warn':'badge-blue'}">${c.remaining===0?'Bitti':c.remaining===1?'Son':c.remaining+' kaldı'}</span>
+          <button class="btn btn-sm" onclick="openEditAppt(${a.id})">Düzenle</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAppt(${a.id})">Sil</button>
+        </div>
+      </div>`;
+    }).join('')}`;
+  }).join('');
+}
+
+// ── PAYMENTS ───────────────────────────────────────────────────────────────
+function renderPayments(){
+  const allPending=db.clients.flatMap(c=>c.payments.filter(p=>p.status!=='Ödendi').map(p=>({...p,clientName:c.name})));
+  return`
+  ${allPending.length?`<div class="alert-box danger" style="margin-bottom:16px"><div class="alert-dot">!</div><div><div class="alert-title">Bekleyen / Gecikmiş Ödemeler (${allPending.length})</div><div class="alert-body">${allPending.map(p=>`${p.clientName} — ${p.amount.toLocaleString('tr-TR')}₺ <span class="badge ${p.status==='Gecikmiş'?'badge-danger':'badge-warn'}">${p.status}</span>`).join('<br>')}</div></div></div>`:''}
+  ${db.clients.map((c,i)=>{
+    const totalAmt=c.payments.reduce((s,p)=>s+p.amount,0);
+    const paidAmt=c.payments.filter(p=>p.status==='Ödendi').reduce((s,p)=>s+p.amount,0);
+    return`<div class="payment-card">
+      <div class="payment-card-header">
+        ${avatar(c.name,i)}
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">${c.name}</div>
+          <div style="font-size:12px;color:var(--text3)">Ödenen: ${paidAmt.toLocaleString('tr-TR')}₺ / Toplam: ${totalAmt.toLocaleString('tr-TR')}₺</div>
+        </div>
+        <button class="btn btn-sm" onclick="openAddPayment(${c.id})">+ Ödeme Ekle</button>
+      </div>
+      ${c.payments.length?`<table class="payment-table">
+        <thead><tr><th>Tarih</th><th>Tutar</th><th>Durum</th><th>İşlem</th></tr></thead>
+        <tbody>${c.payments.map((p,pi)=>`<tr>
+          <td>${p.date}</td>
+          <td style="font-family:'DM Mono',monospace;font-weight:500">${p.amount.toLocaleString('tr-TR')}₺</td>
+          <td><span class="badge ${p.status==='Ödendi'?'badge-ok':p.status==='Gecikmiş'?'badge-danger':'badge-warn'}">${p.status}</span></td>
+          <td style="display:flex;gap:8px;align-items:center">
+            <select class="status-sel" onchange="changePayStatus(${c.id},${pi},this.value)">
+              <option ${p.status==='Ödendi'?'selected':''}>Ödendi</option>
+              <option ${p.status==='Bekliyor'?'selected':''}>Bekliyor</option>
+              <option ${p.status==='Gecikmiş'?'selected':''}>Gecikmiş</option>
+            </select>
+            <button class="btn btn-danger btn-sm" onclick="deletePayment(${c.id},${pi})">Sil</button>
+          </td>
+        </tr>`).join('')}</tbody>
+      </table>`:`<div style="padding:16px 18px;font-size:13px;color:var(--text3)">Henüz ödeme kaydı yok.</div>`}
+    </div>`;
+  }).join('')}`;
+}
+
+// ── CLIENT DETAIL MODAL ────────────────────────────────────────────────────
+function openClientDetail(id){
+  const c=getClient(id);
+  const i=clientIdx(id);
+  const pct=c.total>0?Math.round((c.remaining/c.total)*100):0;
+  const cAppts=db.appointments.filter(a=>a.clientId==id).sort((a,b)=>a.date.localeCompare(b.date));
+  openModal(`
+  <div class="modal-header">
+    <div style="display:flex;align-items:center;gap:12px">
+      ${avatar(c.name,i)}
+      <div><div class="modal-title">${c.name}</div><div style="font-size:12px;color:var(--text3)">${c.goal}</div></div>
+    </div>
+    <button class="modal-close" onclick="closeModal()">×</button>
+  </div>
+
+  <div class="modal-section-title">İletişim Bilgileri</div>
+  <div class="detail-row"><span class="detail-label">Telefon</span><span class="detail-val">${c.phone||'—'}</span></div>
+  <div class="detail-row"><span class="detail-label">E-posta</span><span class="detail-val">${c.email||'—'}</span></div>
+
+  <div class="modal-section-title" style="margin-top:18px">Ders Durumu</div>
+  <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+    <span style="font-size:13px;color:var(--text3)">Kalan / Toplam</span>
+    <span style="font-size:16px;font-weight:700;color:${c.remaining===0?'var(--danger)':c.remaining===1?'var(--warn)':'var(--success)'};font-family:'DM Mono',monospace">${c.remaining} / ${c.total}</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${c.remaining===0?'var(--danger)':c.remaining<=2?'var(--warn)':'var(--success)'}"></div></div>
+  <div class="lesson-controls">
+    <button class="lesson-btn" onclick="adjLesson(${id},-1)">−</button>
+    <div class="lesson-count">${c.remaining}</div>
+    <button class="lesson-btn" onclick="adjLesson(${id},1)">+</button>
+    <button class="btn btn-sm" style="margin-left:8px" onclick="openAddLessonsModal(${id})">Paket Ekle</button>
+    <button class="btn btn-sm" onclick="openEditClient(${id})">Müşteriyi Düzenle</button>
+  </div>
+
+  <div class="modal-section-title" style="margin-top:18px">Randevular (${cAppts.length})</div>
+  ${cAppts.length?cAppts.slice(-6).map(a=>{const d=new Date(a.date+'T00:00:00');return`<div class="appt-mini"><span>${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} — ${a.time}</span><span style="color:var(--text3)">${a.type} · ${a.duration}dk</span></div>`}).join(''):`<div style="font-size:13px;color:var(--text3);padding:4px 0">Randevu bulunmuyor.</div>`}
+
+  <div class="modal-section-title" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center">
+    <span>Notlar & Sağlık Bilgisi</span>
+    <button class="btn btn-sm" onclick="editNoteInline(${id})">Düzenle</button>
+  </div>
+  <div class="note-display" id="note-display-${id}">${c.notes?c.notes:'<span class="note-empty">Not eklenmedi. Rahatsızlık, kısıtlama veya özel durumları buraya ekleyin.</span>'}</div>
+
+  <div style="display:flex;gap:8px;margin-top:20px">
+    <button class="btn btn-danger btn-sm" onclick="deleteClient(${id})">Müşteriyi Sil</button>
+    <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="closeModal()">Kapat</button>
+  </div>`);
+}
+
+function editNoteInline(id){
+  const c=getClient(id);
+  document.getElementById(`note-display-${id}`).innerHTML=`<textarea id="note-ta-${id}" style="width:100%;min-height:90px;border:none;background:transparent;font-size:13px;resize:vertical;outline:none;font-family:'DM Sans',sans-serif;line-height:1.6">${c.notes||''}</textarea><button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="saveNote(${id})">Kaydet</button>`;
+  document.getElementById(`note-ta-${id}`).focus();
+}
+
+function saveNote(id){
+  const c=getClient(id);
+  c.notes=document.getElementById(`note-ta-${id}`).value;
+  saveDB();
+  openClientDetail(id);
+}
+
+function adjLesson(id,delta){
+  const c=getClient(id);
+  c.remaining=Math.max(0,c.remaining+delta);
+  if(delta>0&&c.remaining>c.total) c.total=c.remaining;
+  saveDB();
+  openClientDetail(id);
+}
+
+function openAddLessonsModal(id){
+  openModal(`<div class="modal-header"><div class="modal-title">Ders Paketi Ekle</div><button class="modal-close" onclick="openClientDetail(${id})">×</button></div>
+  <div class="form-group"><label class="form-label">Eklenecek Ders Sayısı</label><input type="number" id="al-n" value="10" min="1"/></div>
+  <button class="btn btn-primary btn-full" onclick="addLessons(${id})">Ekle & Kaydet</button>`);
+}
+
+function addLessons(id){
+  const c=getClient(id);
+  const n=parseInt(document.getElementById('al-n').value)||0;
+  c.remaining+=n; c.total+=n;
+  saveDB();
+  openClientDetail(id);
+}
+
+function deleteClient(id){
+  if(!confirm('Bu müşteriyi silmek istediğinizden emin misiniz?')) return;
+  db.clients=db.clients.filter(c=>c.id!=id);
+  db.appointments=db.appointments.filter(a=>a.clientId!=id);
+  saveDB();
+  closeModal();
+  render();
+}
+
+// ── ADD / EDIT CLIENT ──────────────────────────────────────────────────────
+function openAddClient(){
+  openModal(`<div class="modal-header"><div class="modal-title">Yeni Müşteri Ekle</div><button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="modal-section-title">Kişisel Bilgiler</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Ad Soyad *</label><input type="text" id="nc-name" placeholder="Ayşe Kaya"/></div>
+    <div class="form-group"><label class="form-label">Hedef</label><input type="text" id="nc-goal" placeholder="Kilo Verme"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Telefon</label><input type="tel" id="nc-phone" placeholder="0532 000 0000"/></div>
+    <div class="form-group"><label class="form-label">E-posta</label><input type="email" id="nc-email" placeholder="ornek@mail.com"/></div>
+  </div>
+  <div class="modal-section-title">Ders Paketi</div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Toplam Ders</label><input type="number" id="nc-total" value="10" min="0"/></div>
+    <div class="form-group"><label class="form-label">Kalan Ders</label><input type="number" id="nc-rem" value="10" min="0"/></div>
+  </div>
+  <div class="modal-section-title">Sağlık & Notlar</div>
+  <div class="form-group"><label class="form-label">Rahatsızlık, kısıtlama, özel durumlar</label><textarea id="nc-notes" placeholder="Örn: Diz ağrısı var, squat kısıtlandı. Hipertansiyon mevcut..."></textarea></div>
+  <button class="btn btn-primary btn-full" onclick="addClient()">Kaydet</button>`);
+}
+
+function addClient(){
+  const name=document.getElementById('nc-name').value.trim();
+  if(!name){alert('Ad Soyad zorunludur.');return;}
+  db.clients.push({id:newId(),name,goal:document.getElementById('nc-goal').value||'-',phone:document.getElementById('nc-phone').value||'',email:document.getElementById('nc-email').value||'',remaining:parseInt(document.getElementById('nc-rem').value)||0,total:parseInt(document.getElementById('nc-total').value)||0,notes:document.getElementById('nc-notes').value||'',payments:[]});
+  saveDB();closeModal();render();
+}
+
+function openEditClient(id){
+  const c=getClient(id);
+  openModal(`<div class="modal-header"><div class="modal-title">Müşteriyi Düzenle</div><button class="modal-close" onclick="openClientDetail(${id})">×</button></div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Ad Soyad</label><input type="text" id="ec-name" value="${c.name}"/></div>
+    <div class="form-group"><label class="form-label">Hedef</label><input type="text" id="ec-goal" value="${c.goal}"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Telefon</label><input type="tel" id="ec-phone" value="${c.phone}"/></div>
+    <div class="form-group"><label class="form-label">E-posta</label><input type="email" id="ec-email" value="${c.email}"/></div>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="editClient(${id})">Güncelle</button>`);
+}
+
+function editClient(id){
+  const c=getClient(id);
+  c.name=document.getElementById('ec-name').value.trim()||c.name;
+  c.goal=document.getElementById('ec-goal').value||c.goal;
+  c.phone=document.getElementById('ec-phone').value;
+  c.email=document.getElementById('ec-email').value;
+  saveDB();openClientDetail(id);
+}
+
+// ── APPOINTMENTS ───────────────────────────────────────────────────────────
+function apptForm(a){
+  const today=todayStr();
+  return`
+  <div class="form-group"><label class="form-label">Müşteri *</label>
+    <select id="na-client">${db.clients.map(c=>`<option value="${c.id}" ${a&&a.clientId==c.id?'selected':''}>${c.name}</option>`).join('')}</select>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Tarih *</label><input type="date" id="na-date" value="${a?a.date:today}"/></div>
+    <div class="form-group"><label class="form-label">Saat *</label><input type="time" id="na-time" value="${a?a.time:'10:00'}"/></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Süre (dakika)</label><input type="number" id="na-dur" value="${a?a.duration:60}" min="15"/></div>
+    <div class="form-group"><label class="form-label">Seans Türü</label>
+      <select id="na-type"><option ${!a||a.type==='Normal Seans'?'selected':''}>Normal Seans</option><option ${a&&a.type==='Değerlendirme'?'selected':''}>Değerlendirme</option><option ${a&&a.type==='Performans'?'selected':''}>Performans</option><option ${a&&a.type==='Rehabilitasyon'?'selected':''}>Rehabilitasyon</option><option ${a&&a.type==='Online Seans'?'selected':''}>Online Seans</option></select>
+    </div>
+  </div>`;
+}
+
+function openAddAppt(){
+  if(!db.clients.length){alert('Önce müşteri eklemelisiniz.');return;}
+  openModal(`<div class="modal-header"><div class="modal-title">Randevu Ekle</div><button class="modal-close" onclick="closeModal()">×</button></div>
+  ${apptForm(null)}
+  <button class="btn btn-primary btn-full" onclick="addAppt()">Kaydet</button>`);
+}
+
+function addAppt(){
+  const clientId=parseInt(document.getElementById('na-client').value);
+  const date=document.getElementById('na-date').value;
+  const time=document.getElementById('na-time').value;
+  if(!date||!time){alert('Tarih ve saat zorunludur.');return;}
+  db.appointments.push({id:newId(),clientId,date,time,duration:parseInt(document.getElementById('na-dur').value)||60,type:document.getElementById('na-type').value});
+  saveDB();closeModal();render();
+}
+
+function openEditAppt(id){
+  const a=db.appointments.find(x=>x.id==id);
+  openModal(`<div class="modal-header"><div class="modal-title">Randevuyu Düzenle</div><button class="modal-close" onclick="closeModal()">×</button></div>
+  ${apptForm(a)}
+  <button class="btn btn-primary btn-full" onclick="editAppt(${id})">Güncelle</button>`);
+}
+
+function editAppt(id){
+  const a=db.appointments.find(x=>x.id==id);
+  a.clientId=parseInt(document.getElementById('na-client').value);
+  a.date=document.getElementById('na-date').value;
+  a.time=document.getElementById('na-time').value;
+  a.duration=parseInt(document.getElementById('na-dur').value)||60;
+  a.type=document.getElementById('na-type').value;
+  saveDB();closeModal();render();
+}
+
+function deleteAppt(id){
+  if(!confirm('Bu randevuyu silmek istiyor musunuz?')) return;
+  db.appointments=db.appointments.filter(a=>a.id!=id);
+  saveDB();render();
+}
+
+// ── PAYMENTS ───────────────────────────────────────────────────────────────
+function openAddPayment(clientId){
+  openModal(`<div class="modal-header"><div class="modal-title">Ödeme Ekle — ${getClient(clientId).name}</div><button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="form-group"><label class="form-label">Tarih</label><input type="date" id="np-date" value="${todayStr()}"/></div>
+  <div class="form-group"><label class="form-label">Tutar (₺)</label><input type="number" id="np-amount" value="2000" min="0"/></div>
+  <div class="form-group"><label class="form-label">Açıklama</label><input type="text" id="np-desc" placeholder="Opsiyonel"/></div>
+  <div class="form-group"><label class="form-label">Durum</label><select id="np-status"><option>Ödendi</option><option>Bekliyor</option><option>Gecikmiş</option></select></div>
+  <button class="btn btn-primary btn-full" onclick="addPayment(${clientId})">Kaydet</button>`);
+}
+
+function openAddPaymentGlobal(){
+  if(!db.clients.length){alert('Önce müşteri eklemelisiniz.');return;}
+  openModal(`<div class="modal-header"><div class="modal-title">Ödeme Ekle</div><button class="modal-close" onclick="closeModal()">×</button></div>
+  <div class="form-group"><label class="form-label">Müşteri</label><select id="np-client">${db.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+  <div class="form-group"><label class="form-label">Tarih</label><input type="date" id="np-date" value="${todayStr()}"/></div>
+  <div class="form-group"><label class="form-label">Tutar (₺)</label><input type="number" id="np-amount" value="2000" min="0"/></div>
+  <div class="form-group"><label class="form-label">Durum</label><select id="np-status"><option>Ödendi</option><option>Bekliyor</option><option>Gecikmiş</option></select></div>
+  <button class="btn btn-primary btn-full" onclick="addPaymentGlobal()">Kaydet</button>`);
+}
+
+function addPaymentGlobal(){
+  const clientId=parseInt(document.getElementById('np-client').value);
+  const c=getClient(clientId);
+  c.payments.push({date:document.getElementById('np-date').value||todayStr(),amount:parseInt(document.getElementById('np-amount').value)||0,status:document.getElementById('np-status').value});
+  saveDB();closeModal();render();
+}
+
+function addPayment(clientId){
+  const c=getClient(clientId);
+  c.payments.push({date:document.getElementById('np-date').value||todayStr(),amount:parseInt(document.getElementById('np-amount').value)||0,status:document.getElementById('np-status').value});
+  saveDB();closeModal();render();
+}
+
+function changePayStatus(clientId,pi,val){
+  getClient(clientId).payments[pi].status=val;
+  saveDB();render();
+}
+
+function deletePayment(clientId,pi){
+  if(!confirm('Bu ödeme kaydını silmek istiyor musunuz?')) return;
+  getClient(clientId).payments.splice(pi,1);
+  saveDB();render();
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+function openModal(html){
+  document.getElementById('modal').innerHTML=html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');render();}
+function maybeClose(e){if(e.target===document.getElementById('overlay'))closeModal();}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+updateSidebarStats();
+render();
+window.addEventListener('load', () => {
+  // Google Identity Services yüklendikten sonra auth'u başlat
+  const checkGSI = setInterval(() => {
+    if (typeof google !== 'undefined' && google.accounts) {
+      clearInterval(checkGSI);
+      initGoogleAuth();
+    }
+  }, 200);
+});
+</script>
+</body>
+</html>
